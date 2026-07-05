@@ -1,30 +1,26 @@
-# 1. Use the official, stable Python 3.11 Linux image
-FROM python:3.11-slim
+# 1. Lock to the highly stable Debian 'Bookworm' OS
+FROM python:3.11-slim-bookworm
 
-# 2. Set the working directory inside the cloud server
+# 2. Set the working directory
 WORKDIR /app
 
-# 3. Force the exact C++ graphical libraries to install flawlessly
+# 3. Use the updated Linux package names (libgl1 instead of mesa)
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libxcb1 \
     && rm -rf /var/lib/apt/lists/*
 
 # 4. Copy your requirements file
 COPY requirements.txt .
 
-# 5. Install the Python libraries (PyTorch, FastAPI, etc.)
+# 5. Install the Python libraries
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 6. SURGICAL FIX: Destroy the broken OpenCV and force the headless version
+# 6. Destroy the broken OpenCV and force the headless version
 RUN pip uninstall -y opencv-python opencv-python-headless
 RUN pip install opencv-python-headless
 
-# 7. Copy the rest of your app's code (main.py, best.pt)
+# 7. Copy the rest of your app's code
 COPY . .
 
 # 8. Start the FastAPI server using Railway's dynamic port
